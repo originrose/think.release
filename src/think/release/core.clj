@@ -15,6 +15,16 @@
 
 (def version-regex #"(\w+)\.(\w+)\.(\w+)(.*)")
 
+(def snapshot-indicator "-SNAPSHOT")
+
+(defn parse-long
+  [part-name data-str]
+  (try
+    (Long/parseLong data-str)
+    (catch Throwable e
+      (throw (RuntimeException. (format "Failed to parse version part %s" part-name)
+                                e)))))
+
 (defn parse-version
   [^String version-string]
   (let [snapshot? (.endsWith version-string snapshot-indicator)
@@ -56,17 +66,6 @@
                       (:rest version) (if snapshot? "-SNAPSHOT" "")))))
 
 
-(def snapshot-indicator "-SNAPSHOT")
-
-
-(defn parse-long
-  [part-name data-str]
-  (try
-    (Long/parseLong data-str)
-    (catch Throwable e
-      (throw (RuntimeException. (format "Failed to parse version part %s" part-name)
-                                e)))))
-
 
 (defn bump-project-version
   [project-file-data bump-type snapshot?]
@@ -80,7 +79,9 @@
                   version)]
     (write-version-to-project version snapshot?)))
 
-(def dependency-regex #"\[([\w\./]+)\s+\"([^\"]+)\"\]")
+(def dependency-regex #"\[([\w\.\-/]+)\s+\"([^\"]+)\"\]")
+
+(def lein-dependency-regex #"(\d+)\.(\d+)\.(\d+)(?:-(?!SNAPSHOT)([^\-]+))?(?:-(SNAPSHOT))?")
 
 
 (defn re-update-in
@@ -121,7 +122,7 @@ on the version being on the same line as the dependency"
                              (into {}))]
     (doseq [proj-file project-file-seq]
       (let [updated-proj (-> (crap-parse-project-file proj-file)
-                             (update-in [:first-line-vec 2] (constantly version-string))
+                             (update-in [:first-line-vec 2] (constantly (format "\"%s\"" version-string)))
                              (set-project-dependencies project-dep-map))
             proj-str (string/join "\n"
                                   (concat [(string/join " " (:first-line-vec updated-proj))]
