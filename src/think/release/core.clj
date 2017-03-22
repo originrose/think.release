@@ -169,9 +169,9 @@ on the version being on the same line as the dependency"
 
 (defn show-project-version
   [& args]
-  (clojure.pprint/pprint (-> (project-directory)
-                             recurse-find-project-files
-                             project-version)))
+  (println (-> (project-directory)
+               recurse-find-project-files
+               project-version)))
 
 
 (defn set-version

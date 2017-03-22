@@ -25,4 +25,5 @@
                   "releases"  {:url "s3p://thinktopic.jars/releases/"
                                :no-auth true
                                :snapshots false
-                               :sign-releases false}})
+                               :sign-releases false}}
+  :aliases {"release"      ["run" "-m" "think.release.main"]})

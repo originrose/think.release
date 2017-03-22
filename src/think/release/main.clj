@@ -20,12 +20,16 @@ else
   []
   (println "commands:
 set-version: Set all projects in directory to version x.
+show-project-version: show the new version set-version will enact.
+list-projects: show the list of projects set-project will affect
 --
 
-Set all projects to that version including if any projects in the project set
-are dependencies.
+Arguments:
 ")
-  (clojure.pprint/pprint docs))
+  (->> docs
+       (map (fn [[k v]]
+              (println k v)))
+       dorun))
 
 (defn build-command-map-from-namespace
   [ns-sym]
