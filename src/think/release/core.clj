@@ -1,11 +1,14 @@
 (ns think.release.core
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
-            [clojure.pprint :as pprint])
-  (:import [java.io File]))
+            [clojure.pprint :as pprint]
+            [think.config.core :as config])
+  (:import [java.io File]
+           [java.util Date]
+           [java.text SimpleDateFormat]))
 
 
-(defn recurse-find-project-files
+(defn ^:private recurse-find-project-files
   [dirname]
   (let [all-files (.listFiles ^File (io/file dirname))
         all-dirs (filter #(and (.isDirectory ^File %)
@@ -13,11 +16,11 @@
         all-projects (filter #(= "project.clj" (.getName ^File %)) all-files)]
     (concat all-projects (mapcat recurse-find-project-files all-dirs))))
 
-(def version-regex #"(\w+)\.(\w+)\.(\w+)(.*)")
+(def ^:private version-regex #"(\w+)\.(\w+)\.(\w+)(.*)")
 
-(def snapshot-indicator "-SNAPSHOT")
+(def ^:private snapshot-indicator "-SNAPSHOT")
 
-(defn parse-long
+(defn ^:private parse-long
   [part-name data-str]
   (try
     (Long/parseLong data-str)
@@ -25,14 +28,14 @@
       (throw (RuntimeException. (format "Failed to parse version part %s" part-name)
                                 e)))))
 
-(defn parse-version
+(defn ^:private parse-version
   [^String version-string]
   (let [snapshot? (.endsWith version-string snapshot-indicator)
         version-string (if snapshot?
                          (.substring version-string 0 (- (.length version-string)
                                                          (.length ^String snapshot-indicator))))
-        matcher (re-matcher  version-string)
-        groups (vec (drop 1 (re-find version-regex matcher)))]
+        matcher (re-matcher version-regex version-string)
+        groups (vec (drop 1 (re-find matcher)))]
     (when-not (seq groups)
       (throw (ex-info "Failed to parse project version string"
                       {:version-string version-string})))
@@ -43,7 +46,7 @@
      :rest (get groups 3)}))
 
 
-(defn crap-parse-project-file
+(defn ^:private crap-parse-project-file
   "Pull first line out of project file and return the third thing in that line space delimited"
   [proj-file]
   (let [file-lines (string/split (slurp proj-file) #"\n")
@@ -53,38 +56,29 @@
      :proj-data rest-file}))
 
 
-(defn get-version-from-project
+(defn ^:private get-version-from-project
   [parsed-project]
   (parse-version (read-string (nth (:first-line-vec parsed-project) 2))))
 
 
-(defn write-version-to-project
+(defn ^:private version->string
+  [version]
+  (format "\"%s.%s.%s%s%s\"" (:major version) (:minor version) (:bugfix version)
+          (:rest version) (if (:snapshot version) "-SNAPSHOT" "")))
+
+
+(defn ^:private write-version-to-project
   [parsed-project version snapshot?]
   (update-in parsed-project [:first-line-vec 2]
-             (constantly
-              (format "\"%s.%s.%s%s%s\"" (:major version) (:minor version) (:bugfix version)
-                      (:rest version) (if snapshot? "-SNAPSHOT" "")))))
+             (constantly (version->string version))))
 
 
+(def ^:private dependency-regex #"\[([\w\.\-/]+)\s+\"([^\"]+)\"\]")
 
-(defn bump-project-version
-  [project-file-data bump-type snapshot?]
-  (let [version (-> (get-version-from-project project-file-data)
-                    (update-in [bump-type] inc))
-        version (condp = bump-type
-                  :major (-> version
-                             (assoc :minor 0)
-                             (assoc :bugfix 0))
-                  :minor (assoc version :bugfix 0)
-                  version)]
-    (write-version-to-project version snapshot?)))
-
-(def dependency-regex #"\[([\w\.\-/]+)\s+\"([^\"]+)\"\]")
-
-(def lein-dependency-regex #"(\d+)\.(\d+)\.(\d+)(?:-(?!SNAPSHOT)([^\-]+))?(?:-(SNAPSHOT))?")
+(def ^:private lein-dependency-regex #"(\d+)\.(\d+)\.(\d+)(?:-(?!SNAPSHOT)([^\-]+))?(?:-(SNAPSHOT))?")
 
 
-(defn re-update-in
+(defn ^:private re-update-in
   "Recursive function to do updates according to a regex within a string.
 group-fn receives a vector of the regex groups, the first of which always
 contains the entire string matched."
@@ -98,7 +92,7 @@ contains the entire string matched."
       s)))
 
 
-(defn set-project-dependencies
+(defn ^:private set-project-dependencies
   "If a dependency of the project is in the map, update it
 to the version specified in the dependency map.  Relies implicitly
 on the version being on the same line as the dependency"
@@ -113,7 +107,7 @@ on the version being on the same line as the dependency"
                     %)))
 
 
-(defn set-project-group-to-version
+(defn ^:private set-project-group-to-version
   [version-string project-file-seq]
   (let [project-dep-map (->> project-file-seq
                              (map crap-parse-project-file)
@@ -122,9 +116,69 @@ on the version being on the same line as the dependency"
                              (into {}))]
     (doseq [proj-file project-file-seq]
       (let [updated-proj (-> (crap-parse-project-file proj-file)
-                             (update-in [:first-line-vec 2] (constantly (format "\"%s\"" version-string)))
+                             (update-in [:first-line-vec 2] (constantly (format "\"%s\""
+                                                                                version-string)))
                              (set-project-dependencies project-dep-map))
             proj-str (string/join "\n"
                                   (concat [(string/join " " (:first-line-vec updated-proj))]
                                           (:proj-data updated-proj)))]
         (spit proj-file (str proj-str "\n"))))))
+
+(defn ^:private project-directory
+  []
+  (let [proj-dir (or (config/unchecked-get-config :project-directory)
+                     "")]
+    (if (= proj-dir "")
+      (System/getProperty "user.dir")
+      proj-dir)))
+
+
+
+
+(defn ^:private bump-project-version
+  [version]
+  (if (get version :snapshot?)
+    (assoc version
+           :snapshot? false
+           :rest (if (config/get-config :date-version)
+                   (str "-"
+                    (.format (SimpleDateFormat. "yyyy-MM-dd-hh-mm") (Date.)))
+                   ""))
+    (if (= "" (or (get version :rest) ""))
+      (update version :bugfix #(inc (or % 0)))
+      (assoc version :rest ""))))
+
+
+(defn ^:private project-version
+  [project-list]
+  (let [project-version (or (config/unchecked-get-config :project-version)
+                            "")]
+    (if (= project-version "")
+      (-> (crap-parse-project-file (first project-list))
+          (get-version-from-project)
+          bump-project-version
+          version->string)
+      project-version)))
+
+
+(defn list-projects
+  [& args]
+  (clojure.pprint/pprint [(project-directory)
+                          (recurse-find-project-files (project-directory))]))
+
+
+(defn show-project-version
+  [& args]
+  (clojure.pprint/pprint (-> (project-directory)
+                             recurse-find-project-files
+                             project-version)))
+
+
+(defn set-version
+  [& args]
+  (let [project-dir (project-directory)]
+    (if-let [project-list (-> (recurse-find-project-files project-dir)
+                              seq)]
+      (set-project-group-to-version (project-version project-list) project-list)
+      (throw (ex-info "Failed to find any projects!"
+                      {:project-directory (project-directory)})))))

@@ -1,25 +1,83 @@
 (ns think.release.main
+  (:require [clojure.tools.cli :refer [parse-opts]]
+            [think.config.core :refer [with-config get-config get-configurable-options]]
+            [think.release.core :as release]
+            [clojure.string :as s])
   (:gen-class))
 
-(defn print-help
-  []
-  (println "possible arguments are:
-version bump-type project.clj-path
-update version-str [project-top-dir]
+(def docs
+  {:project-version "project-version version to set the project to.  If empty then perform:
+if first project.clj version contains snapshot
+ - remove snapshot, (if --date-version add date).
 
-version will attempt to output the version bumped by bump type which must be one of:
-\t[major,minor,release].
-update will attempt to update all project.clj files lying at or below a given directory
-\tso that the are exactly the given version str and any projects depending on them are
-\tthe given version-str"))
+else
+ - if dated remove
+ - else increment last integer
+ - add snapshot"
+   :project-directory "The top level directory to recursively search for projects."})
+
+(defn- print-help
+  []
+  (println "commands:
+set-version: Set all projects in directory to version x.
+--
+
+Set all projects to that version including if any projects in the project set
+are dependencies.
+")
+  (clojure.pprint/pprint docs))
+
+(defn build-command-map-from-namespace
+  [ns-sym]
+  (->> (ns-publics ns-sym)
+       (map (fn [[k v]]
+              [(keyword (name k)) v]))
+       (into {})))
+
+
+(defn cli-options
+  [doc-map]
+  (concat
+  (for [c (get-configurable-options)]
+    [nil (str "--" (name c) " "  (s/upper-case (name c))) (get doc-map c)
+     :default (get-config c)
+     :id c])
+  [["-h" "--help"]]))
+
+
+(defn auto-main
+  "Find any public symbols in core-ns and those become the commands.
+Uses config system to parse command line arguments."
+  [help-fn core-ns-sym doc-map args]
+  (require core-ns-sym)
+  (let [{:keys [options arguments errors summary]} (parse-opts args (cli-options doc-map))
+        arguments (map #(if (and (string? %) (= (first %) \:))
+                          (keyword (subs % 1))
+                          %)
+                       arguments)]
+
+    (with-config (apply concat (into {} options))
+      (try
+        (if-let [fn-val (-> (build-command-map-from-namespace core-ns-sym)
+                            (get (keyword (first arguments))))]
+          (fn-val (rest arguments))
+          (do
+            (help-fn)
+            -1))
+        (catch Throwable e
+          (binding [*out* *err*]
+            (clojure.pprint/pprint ["Main failure"
+                                    {:error e
+                                     :main-ns core-ns-sym
+                                     :options (->> options
+                                                   (mapv (fn [[k v]]
+                                                           [k (get-config k)]))
+                                                   (into {}))
+                                     :arguments arguments}]))
+          -1)))))
 
 
 (defn -main
   [& args]
-  (when (< 2 (count args))
-    (print-help))
-
-  (let [command (keyword command)]
-    (condp = command
-      :version )
-    ))
+  (-> (auto-main print-help 'think.release.core docs args)
+      (System/exit)))
