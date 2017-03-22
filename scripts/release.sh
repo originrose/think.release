@@ -2,16 +2,16 @@
 
 set -e
 
-git pull
+#git pull
 
-scripts/deps.sh
+#scripts/deps.sh
 source scripts/core-access
 
 RELEASE_VERSION=`lein release show-project-version`
 
-lein release set-version
+#lein release set-version
 
-git commit -am "Release $RELEASE_VERSION"
+#git commit -am "Release $RELEASE_VERSION"
 git tag -v$RELEASE_VERSION -m "Release $RELEASE_VERSION"
 
 lein deploy
