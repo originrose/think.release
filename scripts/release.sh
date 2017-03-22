@@ -12,7 +12,7 @@ RELEASE_VERSION=`lein release show-project-version`
 #lein release set-version
 
 #git commit -am "Release $RELEASE_VERSION"
-git tag -v$RELEASE_VERSION -m "Release $RELEASE_VERSION"
+git tag -a v$RELEASE_VERSION -m "Release $RELEASE_VERSION"
 
 lein deploy
 
