@@ -140,49 +140,82 @@ on the version being on the same line as the dependency"
 
 
 (defn ^:private bump-project-version
-  [version]
-  (if (get version :snapshot?)
+  [version bump-type]
+  (cond
+    (and (= bump-type :release)
+         (get version :snapshot?))
     (assoc version
            :snapshot? false
            :rest (if (config/get-config :date-version)
                    (str "-"
-                    (.format (SimpleDateFormat. "yyyy-MM-dd-hh-mm") (Date.)))
+                        (.format (SimpleDateFormat. "yyyy-MM-dd-hh-mm") (Date.)))
                    ""))
+    (and (= bump-type :snapshot)
+         (not (get version :snapshot?)))
     (-> (if (= "" (or (get version :rest) ""))
           (update version :bugfix #(inc (or % 0)))
           (assoc version :rest ""))
-        (assoc :snapshot? true))))
+        (assoc :snapshot? true))
+    :else
+    version))
 
 
 
 (defn ^:private project-version
-  [project-list]
+  [project-list bump-type]
   (let [project-version (or (config/unchecked-get-config :project-version)
                             "")]
     (if (= project-version "")
       (-> (crap-parse-project-file (first project-list))
           (get-version-from-project)
-          bump-project-version
+          (bump-project-version bump-type)
           version->string)
       project-version)))
 
 
 (defn list-projects
+  "List the projects found under the project directory."
   [& args]
   (clojure.pprint/pprint [(project-directory)
                           (project-list)]))
 
 
-(defn show-project-version
+(defn show-release-version
+  "Show the pending release version."
   [& args]
-  (println (project-version (project-list))))
+  (println (project-version (project-list) :release)))
 
 
-(defn set-version
+(defn show-snapshot-version
+  "Show the pending snapshot version."
   [& args]
+  (println (project-version (project-list) :snapshot)))
+
+
+(defn show-current-version
+  "Show the current project version"
+  [& args]
+  (println (project-version (project-list) :current)))
+
+
+(defn ^:private set-version
+  [bump-type]
   (let [project-dir (project-directory)]
     (if-let [project-list (-> (recurse-find-project-files project-dir)
                               seq)]
-      (set-project-group-to-version (project-version project-list) project-list)
+      (set-project-group-to-version (project-version project-list bump-type)
+                                    project-list)
       (throw (ex-info "Failed to find any projects!"
                       {:project-directory (project-directory)})))))
+
+
+(defn set-release-version
+  "Set the project to the next release version if it is a snapshot version."
+  [& args]
+  (set-version :release))
+
+
+(defn set-snapshot-version
+  "Set the project to the next snapshot version if it is a non-snapshot version."
+  [& args]
+  (set-version :snapshot))

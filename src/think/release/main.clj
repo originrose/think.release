@@ -14,22 +14,9 @@ else
  - if dated remove
  - else increment last integer
  - add snapshot"
-   :project-directory "The top level directory to recursively search for projects."})
+   :project-directory "The top level directory to recursively search for projects."
+   :date-version "Boolean true or false to use the date when release versioning."})
 
-(defn- print-help
-  []
-  (println "commands:
-set-version: Set all projects in directory to version x.
-show-project-version: show the new version set-version will enact.
-list-projects: show the list of projects set-project will affect
---
-
-Arguments:
-")
-  (->> docs
-       (map (fn [[k v]]
-              (println k v)))
-       dorun))
 
 (defn build-command-map-from-namespace
   [ns-sym]
@@ -37,6 +24,20 @@ Arguments:
        (map (fn [[k v]]
               [(keyword (name k)) v]))
        (into {})))
+
+
+(defn print-help
+  [ns-sym doc-map]
+  (println "commands:")
+  (->> (build-command-map-from-namespace ns-sym)
+       (map (fn [[k v]]
+              (println (format "%s: %s" k (get (meta v) :doc)))))
+       dorun)
+  (println "\n\narguments")
+  (->> doc-map
+       (map (fn [[k v]]
+              (println k v)))
+       dorun))
 
 
 (defn cli-options
@@ -59,7 +60,6 @@ Uses config system to parse command line arguments."
                           (keyword (subs % 1))
                           %)
                        arguments)]
-
     (with-config (apply concat (into {} options))
       (try
         (if-let [fn-val (-> (build-command-map-from-namespace core-ns-sym)
@@ -84,5 +84,5 @@ Uses config system to parse command line arguments."
 
 (defn -main
   [& args]
-  (-> (auto-main print-help 'think.release.core docs args)
+  (-> (auto-main #(print-help 'think.release.core docs) 'think.release.core docs args)
       (System/exit)))

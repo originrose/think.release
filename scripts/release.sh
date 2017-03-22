@@ -2,25 +2,32 @@
 
 set -e
 
-#git pull
+git pull
 
-#scripts/deps.sh
+scripts/deps.sh
 source scripts/core-access
 
-RELEASE_VERSION=`lein release show-project-version`
+CURRENT_VERSION=`lein release show-current-version`
 
-#lein release set-version
+RELEASE_VERSION=`lein release show-release-version`
 
-#git commit -am "Release $RELEASE_VERSION"
-git tag -a v$RELEASE_VERSION -m "Release $RELEASE_VERSION"
+if [ $CURRENT_VERSION != $RELEASE_VERSION ]; then
+   
+   echo "Setting release version $RELEASE_VERSION"
+   lein release set-release-version
 
-lein deploy
+    # git commit -am "Release $RELEASE_VERSION"
+    # git tag -a v$RELEASE_VERSION -m "Release $RELEASE_VERSION"
 
-scripts/build-docker.sh
+    # git push
+    # git push --tags origin
 
-lein release set-version
+   # lein deploy
+   
+fi
 
-git commit -am "Bump back to snapshot"
+# scripts/build-docker.sh
 
-git push
-git push --tags origin
+# lein release set-snapshot-version
+
+# git commit -am "Bump back to snapshot"
