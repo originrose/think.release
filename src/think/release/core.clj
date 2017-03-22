@@ -33,7 +33,8 @@
   (let [snapshot? (.endsWith version-string snapshot-indicator)
         version-string (if snapshot?
                          (.substring version-string 0 (- (.length version-string)
-                                                         (.length ^String snapshot-indicator))))
+                                                         (.length ^String snapshot-indicator)))
+                         version-string)
         matcher (re-matcher version-regex version-string)
         groups (vec (drop 1 (re-find matcher)))]
     (when-not (seq groups)
@@ -63,8 +64,8 @@
 
 (defn ^:private version->string
   [version]
-  (format "\"%s.%s.%s%s%s\"" (:major version) (:minor version) (:bugfix version)
-          (:rest version) (if (:snapshot version) "-SNAPSHOT" "")))
+  (format "%s.%s.%s%s%s" (:major version) (:minor version) (:bugfix version)
+          (:rest version) (if (:snapshot? version) "-SNAPSHOT" "")))
 
 
 (defn ^:private write-version-to-project
@@ -133,6 +134,9 @@ on the version being on the same line as the dependency"
       proj-dir)))
 
 
+(defn ^:private project-list
+  []
+  (recurse-find-project-files (project-directory)))
 
 
 (defn ^:private bump-project-version
@@ -144,9 +148,11 @@ on the version being on the same line as the dependency"
                    (str "-"
                     (.format (SimpleDateFormat. "yyyy-MM-dd-hh-mm") (Date.)))
                    ""))
-    (if (= "" (or (get version :rest) ""))
-      (update version :bugfix #(inc (or % 0)))
-      (assoc version :rest ""))))
+    (-> (if (= "" (or (get version :rest) ""))
+          (update version :bugfix #(inc (or % 0)))
+          (assoc version :rest ""))
+        (assoc :snapshot? true))))
+
 
 
 (defn ^:private project-version
@@ -164,14 +170,12 @@ on the version being on the same line as the dependency"
 (defn list-projects
   [& args]
   (clojure.pprint/pprint [(project-directory)
-                          (recurse-find-project-files (project-directory))]))
+                          (project-list)]))
 
 
 (defn show-project-version
   [& args]
-  (println (-> (project-directory)
-               recurse-find-project-files
-               project-version)))
+  (println (project-version (project-list))))
 
 
 (defn set-version
