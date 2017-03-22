@@ -2,6 +2,8 @@
 
 set -e
 
+git pull
+
 scripts/deps.sh
 source scripts/core-access
 
@@ -19,3 +21,6 @@ scripts/build-docker.sh
 lein release set-version
 
 git commit -am "Bump back to snapshot"
+
+git push
+git push --tags origin
