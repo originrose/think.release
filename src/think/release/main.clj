@@ -60,7 +60,8 @@ Uses config system to parse command line arguments."
       (try
         (if-let [fn-val (-> (build-command-map-from-namespace core-ns-sym)
                             (get (keyword (first arguments))))]
-          (fn-val (rest arguments))
+          (do (fn-val (rest arguments))
+              0)
           (do
             (help-fn)
             -1))

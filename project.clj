@@ -8,12 +8,15 @@
                  [thinktopic/think.config "0.2.4"]
                  [org.clojure/tools.cli "0.3.5"]]
 
+  :main         think.release.main
+
   :profiles { :uberjar {:aot :all
-                        :main         think.release.main
                         :uberjar-name "think.release.jar"}}
 
   :plugins [[lein-environ "1.0.0"]
             [s3-wagon-private "1.3.0"]]
+
+
 
   :repositories  {"snapshots"  {:url "s3p://thinktopic.jars/snapshots/"
                                 :no-auth true
