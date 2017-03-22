@@ -4,8 +4,8 @@ set -e
 
 git pull
 
-scripts/deps.sh
 source scripts/core-access
+lein deps
 
 CURRENT_VERSION=`lein release show-current-version`
 
@@ -26,8 +26,8 @@ if [ $CURRENT_VERSION != $RELEASE_VERSION ]; then
    
 fi
 
-# scripts/build-docker.sh
+scripts/build-docker.sh
 
-# lein release set-snapshot-version
+lein release set-snapshot-version
 
-# git commit -am "Bump back to snapshot"
+git commit -am "Bump back to snapshot"
