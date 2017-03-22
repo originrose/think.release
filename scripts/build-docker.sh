@@ -1,9 +1,8 @@
 #!/bin/bash
 
 set -e
-script_dir=$(dirname $0)
 
-DOCKER_VERSION=`head -n 1 project.clj | awk '{ print $3}' | sed 's/"//g'`
+DOCKER_VERSION=`lein release show-current-version`
 
 lein clean && lein uberjar
 
