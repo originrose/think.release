@@ -31,3 +31,5 @@ scripts/build-docker.sh
 lein release set-snapshot-version
 
 git commit -am "Bump back to snapshot"
+
+git push
