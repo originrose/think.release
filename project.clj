@@ -1,4 +1,4 @@
-(defproject thinktopic/think.release "0.1.0-2017-03-23-08-26"
+(defproject thinktopic/think.release "0.1.0-SNAPSHOT"
   :description "Library to perform releases clojure releases on a project or a directory of
   projects."
   :url "http://github.com/thinktopic/think.release"
