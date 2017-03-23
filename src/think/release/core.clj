@@ -148,7 +148,7 @@ on the version being on the same line as the dependency"
            :snapshot? false
            :rest (if (config/get-config :date-version)
                    (str "-"
-                        (.format (SimpleDateFormat. "yyyy-MM-dd-hh-mm") (Date.)))
+                        (.format (SimpleDateFormat. "yyyy-MM-dd-HH-mm") (Date.)))
                    ""))
     (and (= bump-type :snapshot)
          (not (get version :snapshot?)))
