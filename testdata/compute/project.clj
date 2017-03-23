@@ -1,4 +1,4 @@
-(defproject thinktopic/compute "0.1.0-SNAPSHOT"
+(defproject thinktopic/compute "0.1.0-2017-03-23-08-26"
   :description "Compute abstraction and cpu implementation.  Meant to abstract things like openCL and CUDA usage."
   :url "http://thinktopic.com"
   :license {:name "Eclipse Public License"

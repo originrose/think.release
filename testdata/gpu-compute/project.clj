@@ -1,4 +1,4 @@
-(defproject thinktopic/gpu-compute "0.1.0-SNAPSHOT"
+(defproject thinktopic/gpu-compute "0.1.0-2017-03-23-08-26"
   :description "Gpu backend for thinktopic's compute library"
   :url "http://thinktopic.com/cortex"
   :license {:name "Eclipse Public License"
