@@ -44,6 +44,12 @@ else
  - add snapshot
 :project-directory The top level directory to recursively search for projects.
 :date-version Boolean true or false to use the date when release versioning.
+
+
+think.release[master] % lein run show-release-version --date-version false
+0.1.0
+think.release[master] % lein run show-release-version --date-version true
+0.1.0-2017-05-11-14-24
 ```
 
 ## License
