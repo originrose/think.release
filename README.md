@@ -8,7 +8,7 @@ project.clj:
 
 ```clojure
   :profiles {:tools {:plugins [[lein-environ "1.1.0"]]
-                     :dependencies [[thinktopic/think.release "0.1.0-2017-05-11-10-20"]]
+                     :dependencies [[thinktopic/think.release "0.1.0-2017-05-11-14-13"]]
                      :env {:date-version "false"}}}
 
   :aliases {"release" ["with-profile" "tools" "run" "-m" "think.release.main"]}
