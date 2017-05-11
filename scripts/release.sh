@@ -4,7 +4,6 @@ set -e
 
 git pull
 
-source scripts/core-access
 lein deps
 
 CURRENT_VERSION=`lein release show-current-version`
@@ -22,11 +21,8 @@ if [ $CURRENT_VERSION != $RELEASE_VERSION ]; then
    git push
    git push --tags origin
    
-   lein deploy
-   
+   lein deploy clojars
 fi
-
-scripts/build-docker.sh
 
 lein release set-snapshot-version
 
