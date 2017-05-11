@@ -4,7 +4,7 @@ Library for manipulating hierarchies of project files to enable releasing and up
 efficiently.
 
 
-##Used in your project as a replacement for lein release
+## Used in your project as a replacement for lein release
 
 * In your project.clj:
 
@@ -20,7 +20,7 @@ efficiently.
 
 
 
-##Used as a command line program:
+## Used as a command line program:
 
 ```
 scripts[master] % lein run
