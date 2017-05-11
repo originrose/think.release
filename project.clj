@@ -16,13 +16,4 @@
   :plugins [[lein-environ "1.0.0"]
             [s3-wagon-private "1.3.0"]]
 
-
-  :repositories  {"snapshots"  {:url "s3p://thinktopic.jars/snapshots/"
-                                :no-auth true
-                                :releases false
-                                :sign-releases false}
-                  "releases"  {:url "s3p://thinktopic.jars/releases/"
-                               :no-auth true
-                               :snapshots false
-                               :sign-releases false}}
   :aliases {"release" ["run" "-m" "think.release.main"]})
