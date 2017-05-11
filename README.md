@@ -4,7 +4,9 @@ Library for manipulating hierarchies of project files to enable releasing and up
 efficiently.
 
 
-project.clj:
+##Used in your project as a replacement for lein release
+
+* In your project.clj:
 
 ```clojure
   :profiles {:tools {:plugins [[lein-environ "1.1.0"]]
@@ -14,10 +16,11 @@ project.clj:
   :aliases {"release" ["with-profile" "tools" "run" "-m" "think.release.main"]}
 ```
 
-example release [script](examples/release.sh)
+* example release [script](examples/release.sh)
 
 
-Can also be run as a command line program:
+
+##Used as a command line program:
 
 ```
 scripts[master] % lein run
