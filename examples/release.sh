@@ -2,6 +2,9 @@
 
 set -e
 
+##maybe clever code to error if repository isn't clean.  Or ensure you are on
+##the branch you want to release from
+
 git pull
 
 lein do clean, check, test

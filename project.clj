@@ -17,7 +17,6 @@
             [s3-wagon-private "1.3.0"]]
 
 
-
   :repositories  {"snapshots"  {:url "s3p://thinktopic.jars/snapshots/"
                                 :no-auth true
                                 :releases false
@@ -26,4 +25,4 @@
                                :no-auth true
                                :snapshots false
                                :sign-releases false}}
-  :aliases {"release"      ["run" "-m" "think.release.main"]})
+  :aliases {"release" ["run" "-m" "think.release.main"]})
