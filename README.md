@@ -52,6 +52,10 @@ think.release[master] % lein run show-release-version --date-version true
 0.1.0-2017-05-11-14-24
 ```
 
+## Interesting Details
+* Generates command line parameters from public functions in [core](src/think/release/core.clj) namespace and their doc strings.
+* Command line options can be environment variables encoded in project config file [think.config](http://github.com/thinktopic/think.config).
+* All of the above is due to machinery in config and [main](src/think/release/main.clj).
 ## License
 
 Copyright © 2017 ThinkTopic.com, LLC
