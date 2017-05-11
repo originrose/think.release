@@ -16,6 +16,33 @@ project.clj:
 
 example release [script](examples/release.sh)
 
+
+Can also be run as a command line program:
+
+```
+scripts[master] % lein run
+commands:
+:show-snapshot-version: Show the pending snapshot version.
+:set-snapshot-version: Set the project to the next snapshot version if it is a non-snapshot version.
+:list-projects: List the projects found under the project directory.
+:set-release-version: Set the project to the next release version if it is a snapshot version.
+:show-release-version: Show the pending release version.
+:show-current-version: Show the current project version
+
+
+arguments
+:project-version project-version version to set the project to.  If empty then perform:
+if first project.clj version contains snapshot
+ - remove snapshot, (if --date-version add date).
+
+else
+ - if dated remove
+ - else increment last integer
+ - add snapshot
+:project-directory The top level directory to recursively search for projects.
+:date-version Boolean true or false to use the date when release versioning.
+```
+
 ## License
 
 Copyright © 2017 ThinkTopic.com, LLC
